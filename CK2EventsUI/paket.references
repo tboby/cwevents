@@ -1,0 +1,6 @@
+Microsoft.AspNetCore.App
+FParsec
+Newtonsoft.Json.FSharp
+FSharp.Data
+ElectronNET.API
+System.Text.Encoding.CodePages

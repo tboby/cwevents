@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CK2EventsUI\CK2 Events.fsproj">
+      <Name>CK2 Events.fsproj</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\paket-files\git\localfilesystem\cwtools\CWTools\CWTools.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Sample.fs" />
+    <Compile Include="CWTools.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>

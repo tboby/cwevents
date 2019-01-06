@@ -1,0 +1,29 @@
+source https://api.nuget.org/v3/index.json
+//cache ./nupkgs versions: all
+
+nuget ElectronNET.API
+nuget Expecto >= 5.0
+nuget FParsec 1.0.4-RC3
+nuget FSharp.Data 3.0.0-beta
+nuget Microsoft.AspNetCore.App = 2.1
+nuget Newtonsoft.Json.FSharp
+nuget NodaTime < 2.0
+nuget Microsoft.NETCore.App = 2.1
+nuget System.Text.Encoding.CodePages
+nuget Argu
+nuget FSharp.Collections.ParallelSeq
+nuget FSharpPlus
+nuget DotNet.Glob
+nuget FSharpx.Collections
+nuget FSharp.Compiler.Service
+nuget Sandwych.QuickGraph.Core
+nuget FsPickler
+nuget SocketIoClientDotNet = 1.0.5
+
+group tools
+    source https://api.nuget.org/v3/index.json
+    nuget FAKE ~> 4
+
+
+group git
+    git file:///C:/users/thomas/git/cwtools master
