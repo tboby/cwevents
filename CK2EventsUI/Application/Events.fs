@@ -33,20 +33,21 @@ module Events =
             Array.take 10 all
             |> Array.Parallel.map (fun f -> (f, (CKParser.parseEventFile >> printer.prettyPrintFileResult) f))
             |> List.ofArray
-    
+
     let getFileList directory =
         Directory.EnumerateFiles(directory)
         |> List.ofSeq
         |> List.sort
-        |> List.map Path.GetFileNameWithoutExtension    
+        |> List.filter (fun f -> Path.GetExtension f = ".txt")
+        |> List.map Path.GetFileNameWithoutExtension
 
     let getProcessedEvent (settings : CK2Settings) (game : Game) (localisation : ILocalisationAPI) file =
         let filePath = settings.Directory(game).eventDirectory + file + ".txt"
         let fileString = File.ReadAllText(filePath, System.Text.Encoding.GetEncoding(1252))
         let t = (CKParser.parseEventString fileString file)
         match t with
-            | Success(v, _, _) -> 
-                let ck2 = processEventFile v 
+            | Success(v, _, _) ->
+                let ck2 = processEventFile v
                 let comments = getEventComments ck2
                 let immediates = getAllImmediates ck2
                 let options = getEventsOptions localisation ck2
@@ -54,7 +55,7 @@ module Events =
                 let ck3 = addLocalisedDescAll ck2 localisation
                 let events = getEventViews ck3
                 (true, events, immediates, options, pretties, comments, "")
-            | ParserResult.Failure(msg, _, _) -> 
+            | ParserResult.Failure(msg, _, _) ->
                 (false,[],[],[],[],[], msg)
 
     let getNamespace (settings : CK2Settings) (game : Game) file =

@@ -78,7 +78,7 @@ function main(data: Array<any>, triggers: any, options: any, pretties : Array<an
         name = getName(element.ID);
         var desc;
         if (element.Desc === '') {
-            desc = element.ID;  
+            desc = element.ID;
         }
         else {
             desc = getLoc(element.Desc);
@@ -160,10 +160,10 @@ function main(data: Array<any>, triggers: any, options: any, pretties : Array<an
     cy.on("render", function(evt) {
         layer.resetTransform(ctx);
         layer.clear(ctx);
-    
-    
+
+
         layer.setTransform(ctx);
-    
+
 
         // Draw shadows under nodes
 					ctx.shadowColor = "black";
@@ -196,7 +196,7 @@ function main(data: Array<any>, triggers: any, options: any, pretties : Array<an
 					});
 					ctx.restore();
     });
-    
+
 
     var defaults = {
         container: ".cy-row" // can be a HTML or jQuery element or jQuery selector
@@ -226,12 +226,13 @@ function main(data: Array<any>, triggers: any, options: any, pretties : Array<an
          opts.center = <CenterOptions>{eles : edge};
          cy.animate(opts);
     });
-    
+
     cy.on("resize", function(e){
         $("#cy").width(10);
         cy.resize();
         cy.center();
     });
+    return cy.jpg({ full: true, output: 'base64' });
 }
 
 var detailsTemplate = handlebars.compile("<h1>{{title}}</h1><div>{{desc}}</div><div></div><pre>{{full}}</pre>");
@@ -252,13 +253,23 @@ export function go(filesString : string, bundleEdges : boolean, game : number){
         contentType: "application/json"
     })
         .done(function (data) {
-            main(JSON.parse(data.item2), JSON.parse(data.item3), JSON.parse(data.item4), JSON.parse(data.item5), JSON.parse(data.item6) , bundleEdges);            
+            var cy = main(JSON.parse(data.item2), JSON.parse(data.item3), JSON.parse(data.item4), JSON.parse(data.item5), JSON.parse(data.item6) , bundleEdges);
             if(data.item1 === true){
                 document.getElementById('detailsTarget')!.innerHTML = "Click an event to see details";
             }
             else{
                 document.getElementById('detailsTarget')!.innerHTML = "Failed to parse file with error(s) <br/>"+JSON.parse(data.item7)
             }
+            var base64 = cy; //cy.jpg({full: true, output: 'base64'})
+            //document.getElementById('detailsTarget')!.innerHTML = base64;
+            console.log(base64);
+            $.ajax({
+                url: "SaveImage",
+                data: {"base64": base64},
+                // contentType: "application/json",
+                method: "POST",
+                dataType: "json"
+            })
         })
         .fail(function() {
             document.getElementById('detailsTarget')!.innerHTML = "Something went wrong";

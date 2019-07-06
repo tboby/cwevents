@@ -167,6 +167,7 @@ System.register(["dagre", "cytoscape", "cytoscape-qtip", "cytoscape-dagre", "cyt
             cy.resize();
             cy.center();
         });
+        return cy.jpg({ full: true, output: 'base64' });
     }
     function showDetails(id) {
         var node = _data.filter(x => x.ID === id)[0];
@@ -185,13 +186,21 @@ System.register(["dagre", "cytoscape", "cytoscape-qtip", "cytoscape-dagre", "cyt
             contentType: "application/json"
         })
             .done(function (data) {
-            main(JSON.parse(data.item2), JSON.parse(data.item3), JSON.parse(data.item4), JSON.parse(data.item5), JSON.parse(data.item6), bundleEdges);
+            var cy = main(JSON.parse(data.item2), JSON.parse(data.item3), JSON.parse(data.item4), JSON.parse(data.item5), JSON.parse(data.item6), bundleEdges);
             if (data.item1 === true) {
                 document.getElementById('detailsTarget').innerHTML = "Click an event to see details";
             }
             else {
                 document.getElementById('detailsTarget').innerHTML = "Failed to parse file with error(s) <br/>" + JSON.parse(data.item7);
             }
+            var base64 = cy;
+            console.log(base64);
+            $.ajax({
+                url: "SaveImage",
+                data: { "base64": base64 },
+                method: "POST",
+                dataType: "json"
+            });
         })
             .fail(function () {
             document.getElementById('detailsTarget').innerHTML = "Something went wrong";

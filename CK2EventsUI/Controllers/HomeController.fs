@@ -13,7 +13,7 @@ open ElectronNET.API
 open CK2Events.ViewModels
 open System.IO
 
-module Utils = 
+module Utils =
     open Microsoft.AspNetCore.Mvc.ViewFeatures
     let opts = [| TupleArrayConverter() :> JsonConverter |] // this goes global
     type System.Object with
@@ -22,11 +22,11 @@ module Utils =
 
     type ITempDataDictionary with
         member this.Put<'T>(key : string, value : 'T) = this.[key] <- JsonConvert.SerializeObject(value)
-        member this.Get<'T>(key : string) = 
+        member this.Get<'T>(key : string) =
             match this.ContainsKey(key) with
             | true -> Some (JsonConvert.DeserializeObject<'T>(string this.[key]))
             | false -> None
-        
+
 open Utils
 open ElectronNET.API.Entities
 open Microsoft.AspNetCore.Hosting
@@ -37,18 +37,18 @@ open Microsoft.Extensions.Configuration
 type HomeController (provider : IActionDescriptorCollectionProvider, settings : CK2Settings, localisation : ILocalisationAPI, hostingEnvironment : IHostingEnvironment, appSettings : AppSettings, configRoot : IConfiguration) =
     inherit BaseController()
 
- 
+
     member val provider = provider
 
     member this.Index () : ActionResult =
         match Directory.Exists(settings.Directory(appSettings.currentGame).eventDirectory) with
         | false -> upcast this.RedirectToAction("Settings")
-        | true -> 
+        | true ->
             let files = Events.getFileList (settings.Directory(appSettings.currentGame).eventDirectory)
             let filenamespaces = files |> List.map (Events.getNamespace settings appSettings.currentGame)
             let viewmodel = IndexViewModel(settings, files, filenamespaces, appSettings)
             upcast this.View(viewmodel)
-    
+
     member this.Localisation () =
         let viewmodel = LocalisationViewModel(settings, localisation)
         this.View(model = viewmodel)
@@ -60,27 +60,27 @@ type HomeController (provider : IActionDescriptorCollectionProvider, settings : 
     member this.FirstRun() =
         this.Settings()
 
-        
-    
+
+
     member this.SetFolder (game : Game) =
-        let setGameSettings x = 
+        let setGameSettings x =
             match game with
             |Game.CK2 -> settings.ck2Directory <- x
             |Game.HOI4 -> settings.hoi4Directory <- x
             |Game.EU4 -> settings.eu4Directory <- x
             |Game.STL -> settings.stlDirectory <- x
             |_ -> failwith ("Unknown game enum value " + game.ToString())
-        let folderPrompt() = 
+        let folderPrompt() =
             let mainWindow = Electron.WindowManager.BrowserWindows.First()
             let options = OpenDialogOptions (Properties = Array.ofList [OpenDialogProperty.openDirectory])
             let folder = Electron.Dialog.ShowOpenDialogAsync(mainWindow, options) |> Async.AwaitTask
-            folder 
+            folder
         let processFiles = function
             | [|x|] -> setGameSettings x
             | _ -> ()
         match HybridSupport.IsElectronActive with
             | true -> Async.RunSynchronously(folderPrompt()) |> processFiles
-            | false -> () 
+            | false -> ()
         this.TempData.Put("settings", settings)
         this.RedirectToAction("Settings")
 
@@ -98,20 +98,31 @@ type HomeController (provider : IActionDescriptorCollectionProvider, settings : 
     member this.Graph (files : System.Collections.Generic.List<System.String>, game : Game) =
         let viewmodel = EventsViewModel(settings, files.ToJson, game)
         this.View(model = viewmodel);
-        
+
     member this.Error () =
         this.View();
 
     [<HttpGet>]
-    member this.Settings () =        
+    member this.Settings () =
         let newSettings = this.TempData.Get("settings") |> Option.defaultValue settings
         this.View(SettingsViewModel(newSettings))
-    
+
     [<HttpPost>]
     member this.Settings (settings : CK2Settings) =
         let settingsWrap = { userSettings = UserSettings settings}
         let json = settingsWrap.ToJson
-        
+
         File.WriteAllText(hostingEnvironment.ContentRootPath+"/userSettings.json", json)
         configRoot :?> IConfigurationRoot |> (fun c -> c.Reload()) |> ignore
         this.RedirectToAction("Index")
+
+    member this.SaveImage (base64 : string) =
+        let mainWindow = Electron.WindowManager.BrowserWindows.First();
+        let options = SaveDialogOptions()
+        options.Title <- "Save an image"
+        let filter = FileFilter()
+        filter.Name <- "Images"
+        filter.Extensions <- [|"jpg"|]
+        options.Filters <- [|filter|]
+        let result = Electron.Dialog.ShowSaveDialogAsync(mainWindow, options);
+        File.WriteAllBytes(result.Result, System.Convert.FromBase64String(base64));
